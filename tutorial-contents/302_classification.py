@@ -36,7 +36,7 @@ class Net(torch.nn.Module):
 
     def forward(self, x):
         x = F.relu(self.hidden(x))      # activation function for hidden layer
-        x = self.out(x)
+        x = F.softmax(self.out(x))
         return x
 
 net = Net(n_feature=2, n_hidden=10, n_output=2)     # define the network

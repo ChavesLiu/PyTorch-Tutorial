@@ -26,7 +26,6 @@ BATCH_SIZE = 50
 LR = 0.001              # learning rate
 DOWNLOAD_MNIST = False
 
-
 # Mnist digits dataset
 if not(os.path.exists('./mnist/')) or not os.listdir('./mnist/'):
     # not mnist dir or mnist is empyt dir
@@ -67,6 +66,7 @@ class CNN(nn.Module):
                 stride=1,                   # filter movement/step
                 padding=2,                  # if want same width and length of this image after Conv2d, padding=(kernel_size-1)/2 if stride=1
             ),                              # output shape (16, 28, 28)
+                                            # output_size = (input_size + 2 * padding - kernel_size) / stride + 1
             nn.ReLU(),                      # activation
             nn.MaxPool2d(kernel_size=2),    # choose max value in 2x2 area, output shape (16, 14, 14)
         )
@@ -93,14 +93,27 @@ loss_func = nn.CrossEntropyLoss()                       # the target label is no
 
 # following function (plot_with_labels) is for visualization, can be ignored if not interested
 from matplotlib import cm
-try: from sklearn.manifold import TSNE; HAS_SK = True
-except: HAS_SK = False; print('Please install sklearn for layer visualization')
+
+try:
+    from sklearn.manifold import TSNE
+    HAS_SK = True
+except:
+    HAS_SK = False
+    print('Please install sklearn for layer visualization')
+
+
 def plot_with_labels(lowDWeights, labels):
     plt.cla()
     X, Y = lowDWeights[:, 0], lowDWeights[:, 1]
     for x, y, s in zip(X, Y, labels):
-        c = cm.rainbow(int(255 * s / 9)); plt.text(x, y, s, backgroundcolor=c, fontsize=9)
-    plt.xlim(X.min(), X.max()); plt.ylim(Y.min(), Y.max()); plt.title('Visualize last layer'); plt.show(); plt.pause(0.01)
+        c = cm.rainbow(int(255 * s / 9))
+        plt.text(x, y, s, backgroundcolor=c, fontsize=9)
+    plt.xlim(X.min(), X.max())
+    plt.ylim(Y.min(), Y.max())
+    plt.title('Visualize last layer')
+    plt.show()
+    plt.pause(0.01)
+
 
 plt.ion()
 # training and testing
@@ -108,10 +121,10 @@ for epoch in range(EPOCH):
     for step, (b_x, b_y) in enumerate(train_loader):   # gives batch data, normalize x when iterate train_loader
 
         output = cnn(b_x)[0]               # cnn output
-        loss = loss_func(output, b_y)   # cross entropy loss
-        optimizer.zero_grad()           # clear gradients for this training step
-        loss.backward()                 # backpropagation, compute gradients
-        optimizer.step()                # apply gradients
+        loss = loss_func(output, b_y)      # cross entropy loss
+        optimizer.zero_grad()              # clear gradients for this training step
+        loss.backward()                    # backpropagation, compute gradients
+        optimizer.step()                   # apply gradients
 
         if step % 50 == 0:
             test_output, last_layer = cnn(test_x)
